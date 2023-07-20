@@ -1,6 +1,6 @@
 # RaidCrawler
-![Version](https://img.shields.io/github/v/release/NympheaR/RaidCrawler?label=latest%20release)
-![Download Count](https://img.shields.io/github/downloads/NympheaR/RaidCrawler/total?label=total%20downloads)
+Download Artifact: 
+
 [![Build Status](https://img.shields.io/github/actions/workflow/status/NympheaR/RaidCrawler/dotnet-desktop.yml?branch=main)](https://nightly.link/NympheaR/RaidCrawler/workflows/dotnet-desktop/main/RaidCrawler.zip)
 
 [sys-botbase](https://github.com/olliz0r/sys-botbase) client Raid Viewer for Pokémon Scarlet and Violet.
