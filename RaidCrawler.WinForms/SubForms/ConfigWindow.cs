@@ -34,6 +34,9 @@ namespace RaidCrawler.WinForms.SubForms
             DiscordWebhook.Text = c.DiscordWebhook;
             DiscordWebhook.Enabled = EnableDiscordNotifications.Checked;
             DiscordMessageContent.Text = c.DiscordMessageContent;
+            EnableFomoNotifications.Checked = c.EnableFomoNotification;
+            FomoWebhook.Text = c.DiscordFomoWebhook;
+            FomoWebhook.Enabled = EnableFomoNotifications.Checked;
 
             UseTouch.Checked = c.UseTouch;
             UseOvershoot.Checked = c.UseOvershoot;
@@ -101,6 +104,8 @@ namespace RaidCrawler.WinForms.SubForms
             c.EnableNotification = EnableDiscordNotifications.Checked;
             c.DiscordWebhook = DiscordWebhook.Text;
             c.DiscordMessageContent = DiscordMessageContent.Text;
+            c.EnableFomoNotification = EnableFomoNotifications.Checked;
+            c.DiscordFomoWebhook = FomoWebhook.Text;
 
             c.UseTouch = UseTouch.Checked;
             c.UseOvershoot = UseOvershoot.Checked;
@@ -145,7 +150,7 @@ namespace RaidCrawler.WinForms.SubForms
                 var build = string.Empty;
 #if DEBUG
                 var date = File.GetLastWriteTime(AppContext.BaseDirectory);
-                var build = $" (dev-{date:yyyyMMdd})";
+                build = $" (dev-{date:yyyyMMdd})";
 #endif                
                 mainForm.formTitle = "RaidCrawlerV v" + v.Major + "." + v.Minor + "." + v.Build + build + " " + c.InstanceName;
                 Invoke(() => mainForm.Text = mainForm.formTitle);
@@ -154,6 +159,12 @@ namespace RaidCrawler.WinForms.SubForms
             {
                 DiscordWebhook.Enabled = EnableDiscordNotifications.Checked;
                 labelWebhooks.Text = "Webhooks are " + (DiscordWebhook.Enabled ? "enabled." : "disabled.");
+                var mainForm = Application.OpenForms.OfType<MainWindow>().Single();
+                mainForm.UpdateWebhook(c);
+            }
+            if (FomoWebhook.Modified)
+            {
+                FomoWebhook.Enabled = EnableFomoNotifications.Checked;
                 var mainForm = Application.OpenForms.OfType<MainWindow>().Single();
                 mainForm.UpdateWebhook(c);
             }
@@ -257,6 +268,9 @@ namespace RaidCrawler.WinForms.SubForms
             DiscordWebhook.Enabled = EnableDiscordNotifications.Checked;
         }
 
-
+        private void EnableFomoNotifications_CheckedChanged(object sender, EventArgs e)
+        {
+            FomoWebhook.Enabled = EnableFomoNotifications.Checked;
+        }
     }
 }

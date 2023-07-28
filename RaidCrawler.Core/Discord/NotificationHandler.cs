@@ -14,6 +14,7 @@ namespace RaidCrawler.Core.Discord
     {
         private readonly HttpClient _client;
         private readonly string[]? DiscordWebhooks;
+        private readonly string DiscordMessageContent;
         private readonly IWebhookConfig Config;
 
         public NotificationHandler(IWebhookConfig config)
@@ -21,11 +22,31 @@ namespace RaidCrawler.Core.Discord
             _client = new();
             Config = config;
             DiscordWebhooks = config.EnableNotification ? config.DiscordWebhook.Split(',') : null;
+            DiscordMessageContent = config.DiscordMessageContent;
+        }
+
+        public NotificationHandler(IWebhookConfig config, bool fomo)
+        {
+            _client = new();
+            Config = config;
+            DiscordWebhooks = config.EnableFomoNotification ? config.DiscordFomoWebhook.Split(',') : null;
+            DiscordMessageContent = string.Empty;
         }
 
         public async Task SendNotification(ITeraRaid encounter, Raid raid, RaidFilter filter, string time, IReadOnlyList<(int, int, int)> RewardsList, string hexColor, string spriteName, CancellationToken token)
         {
             if (DiscordWebhooks is null || !Config.EnableNotification)
+                return;
+
+            var webhook = GenerateWebhook(encounter, raid, filter, time, RewardsList, hexColor, spriteName, "webhook");
+            var content = new StringContent(JsonSerializer.Serialize(webhook), Encoding.UTF8, "application/json");
+            foreach (var url in DiscordWebhooks)
+                await _client.PostAsync(url.Trim(), content, token).ConfigureAwait(false);
+        }
+
+        public async Task SendFomoNotification(ITeraRaid encounter, Raid raid, RaidFilter filter, string time, IReadOnlyList<(int, int, int)> RewardsList, string hexColor, string spriteName, CancellationToken token)
+        {
+            if (DiscordWebhooks is null || !Config.EnableFomoNotification)
                 return;
 
             var webhook = GenerateWebhook(encounter, raid, filter, time, RewardsList, hexColor, spriteName, "webhook");
@@ -44,7 +65,7 @@ namespace RaidCrawler.Core.Discord
             {
                 username = instance,
                 avatar_url = "https://www.serebii.net/scarletviolet/ribbons/mightiestmark.png",
-                content = Config.DiscordMessageContent,
+                content = DiscordMessageContent,
                 embeds = new List<object>
                 {
                     new
@@ -134,7 +155,7 @@ namespace RaidCrawler.Core.Discord
             {
                 username = "RaidCrawler " + Config.InstanceName,
                 avatar_url = "https://www.serebii.net/scarletviolet/ribbons/mightiestmark.png",
-                content = Config.DiscordMessageContent,
+                content = DiscordMessageContent,
                 embeds = new List<object>
                 {
                     new

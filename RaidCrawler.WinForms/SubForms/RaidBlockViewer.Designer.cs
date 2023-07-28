@@ -29,58 +29,57 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(RaidBlockViewer));
-            this.RAM = new System.Windows.Forms.TextBox();
-            this.AbsoluteAddress = new System.Windows.Forms.TextBox();
-            this.LabelAbsoluteAddress = new System.Windows.Forms.Label();
-            this.SuspendLayout();
+            RAM = new TextBox();
+            AbsoluteAddress = new TextBox();
+            LabelAbsoluteAddress = new Label();
+            SuspendLayout();
             // 
             // RAM
             // 
-            this.RAM.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.RAM.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.RAM.Location = new System.Drawing.Point(12, 12);
-            this.RAM.Multiline = true;
-            this.RAM.Name = "RAM";
-            this.RAM.Size = new System.Drawing.Size(342, 342);
-            this.RAM.TabIndex = 0;
-            this.RAM.Text = "00 11 22 33 44 55 66 77 88 99 AA BB CC DD EE FF";
+            RAM.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            RAM.Font = new Font("Consolas", 9F, FontStyle.Regular, GraphicsUnit.Point);
+            RAM.Location = new Point(12, 12);
+            RAM.Multiline = true;
+            RAM.Name = "RAM";
+            RAM.Size = new Size(342, 342);
+            RAM.TabIndex = 0;
+            RAM.Text = "00 11 22 33 44 55 66 77 88 99 AA BB CC DD EE FF";
             // 
             // AbsoluteAddress
             // 
-            this.AbsoluteAddress.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.AbsoluteAddress.Font = new System.Drawing.Font("Consolas", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.AbsoluteAddress.Location = new System.Drawing.Point(235, 360);
-            this.AbsoluteAddress.Name = "AbsoluteAddress";
-            this.AbsoluteAddress.ReadOnly = true;
-            this.AbsoluteAddress.Size = new System.Drawing.Size(119, 22);
-            this.AbsoluteAddress.TabIndex = 1;
-            this.AbsoluteAddress.Text = "0123456789ABCDEF";
+            AbsoluteAddress.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            AbsoluteAddress.Font = new Font("Consolas", 9F, FontStyle.Regular, GraphicsUnit.Point);
+            AbsoluteAddress.Location = new Point(235, 360);
+            AbsoluteAddress.Name = "AbsoluteAddress";
+            AbsoluteAddress.ReadOnly = true;
+            AbsoluteAddress.Size = new Size(119, 22);
+            AbsoluteAddress.TabIndex = 1;
+            AbsoluteAddress.Text = "0123456789ABCDEF";
             // 
             // LabelAbsoluteAddress
             // 
-            this.LabelAbsoluteAddress.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.LabelAbsoluteAddress.AutoSize = true;
-            this.LabelAbsoluteAddress.Location = new System.Drawing.Point(69, 362);
-            this.LabelAbsoluteAddress.Name = "LabelAbsoluteAddress";
-            this.LabelAbsoluteAddress.Size = new System.Drawing.Size(160, 15);
-            this.LabelAbsoluteAddress.TabIndex = 2;
-            this.LabelAbsoluteAddress.Text = "Raid Block Absolute Address:";
+            LabelAbsoluteAddress.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            LabelAbsoluteAddress.AutoSize = true;
+            LabelAbsoluteAddress.Location = new Point(69, 362);
+            LabelAbsoluteAddress.Name = "LabelAbsoluteAddress";
+            LabelAbsoluteAddress.Size = new Size(160, 15);
+            LabelAbsoluteAddress.TabIndex = 2;
+            LabelAbsoluteAddress.Text = "Raid Block Absolute Address:";
             // 
             // RaidBlockViewer
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(367, 391);
-            this.Controls.Add(this.LabelAbsoluteAddress);
-            this.Controls.Add(this.AbsoluteAddress);
-            this.Controls.Add(this.RAM);
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.Name = "RaidBlockViewer";
-            this.Text = "RaidBlockViewer";
-            this.ResumeLayout(false);
-            this.PerformLayout();
+            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ClientSize = new Size(367, 391);
+            Controls.Add(LabelAbsoluteAddress);
+            Controls.Add(AbsoluteAddress);
+            Controls.Add(RAM);
+            Icon = (Icon)resources.GetObject("$this.Icon");
+            Name = "RaidBlockViewer";
+            StartPosition = FormStartPosition.CenterParent;
+            Text = "RaidBlockViewer";
+            ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion

@@ -30,6 +30,7 @@ namespace RaidCrawler.WinForms.SubForms
         /// </summary>
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
             L_AdvanceDate = new Label();
             L_BaseDelay = new Label();
             SystemDDownPresses = new NumericUpDown();
@@ -88,6 +89,8 @@ namespace RaidCrawler.WinForms.SubForms
             UseOvershoot = new CheckBox();
             BaseDelay = new NumericUpDown();
             tabWebhook = new TabPage();
+            EnableFomoNotifications = new CheckBox();
+            FomoWebhook = new TextBox();
             EnableDiscordNotifications = new CheckBox();
             DiscordWebhook = new TextBox();
             IVspacerLabel = new Label();
@@ -114,6 +117,7 @@ namespace RaidCrawler.WinForms.SubForms
             picAppIcon = new PictureBox();
             labelAppVersion = new Label();
             Save = new Button();
+            toolTip1 = new ToolTip(components);
             ((System.ComponentModel.ISupportInitialize)SystemDDownPresses).BeginInit();
             ((System.ComponentModel.ISupportInitialize)NavigateToSettings).BeginInit();
             ((System.ComponentModel.ISupportInitialize)OpenSettings).BeginInit();
@@ -732,6 +736,8 @@ namespace RaidCrawler.WinForms.SubForms
             // 
             // tabWebhook
             // 
+            tabWebhook.Controls.Add(EnableFomoNotifications);
+            tabWebhook.Controls.Add(FomoWebhook);
             tabWebhook.Controls.Add(EnableDiscordNotifications);
             tabWebhook.Controls.Add(DiscordWebhook);
             tabWebhook.Controls.Add(IVspacerLabel);
@@ -755,6 +761,25 @@ namespace RaidCrawler.WinForms.SubForms
             tabWebhook.TabIndex = 3;
             tabWebhook.Text = "Webhook";
             tabWebhook.UseVisualStyleBackColor = true;
+            // 
+            // EnableFomoNotifications
+            // 
+            EnableFomoNotifications.AutoSize = true;
+            EnableFomoNotifications.Location = new Point(8, 434);
+            EnableFomoNotifications.Name = "EnableFomoNotifications";
+            EnableFomoNotifications.Size = new Size(312, 19);
+            EnableFomoNotifications.TabIndex = 52;
+            EnableFomoNotifications.Text = "FOMO alerts to Discord webhooks (comma separated)";
+            toolTip1.SetToolTip(EnableFomoNotifications, "It has no functional purpose, it just makes me feel bad!");
+            EnableFomoNotifications.UseVisualStyleBackColor = true;
+            EnableFomoNotifications.CheckedChanged += EnableFomoNotifications_CheckedChanged;
+            // 
+            // FomoWebhook
+            // 
+            FomoWebhook.Location = new Point(6, 454);
+            FomoWebhook.Name = "FomoWebhook";
+            FomoWebhook.Size = new Size(327, 23);
+            FomoWebhook.TabIndex = 51;
             // 
             // EnableDiscordNotifications
             // 
@@ -804,7 +829,7 @@ namespace RaidCrawler.WinForms.SubForms
             // labelWebhooks
             // 
             labelWebhooks.AutoSize = true;
-            labelWebhooks.Location = new Point(7, 458);
+            labelWebhooks.Location = new Point(6, 383);
             labelWebhooks.Name = "labelWebhooks";
             labelWebhooks.Size = new Size(85, 15);
             labelWebhooks.TabIndex = 44;
@@ -838,7 +863,7 @@ namespace RaidCrawler.WinForms.SubForms
             // 
             // btnTestWebHook
             // 
-            btnTestWebHook.Location = new Point(235, 454);
+            btnTestWebHook.Location = new Point(234, 379);
             btnTestWebHook.Name = "btnTestWebHook";
             btnTestWebHook.Size = new Size(104, 23);
             btnTestWebHook.TabIndex = 22;
@@ -1150,5 +1175,8 @@ namespace RaidCrawler.WinForms.SubForms
         private Label label21;
         private Label label2;
         private Label label1;
+        private CheckBox EnableFomoNotifications;
+        private TextBox FomoWebhook;
+        private ToolTip toolTip1;
     }
 }

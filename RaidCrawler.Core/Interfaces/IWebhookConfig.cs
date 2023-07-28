@@ -6,9 +6,11 @@ namespace RaidCrawler.Core.Interfaces
     {
         SwitchProtocol Protocol { get; set; }
         bool EnableNotification { get; set; }
+        bool EnableFomoNotification { get; set; }
         bool ToggleDen { get; set; }
         string InstanceName { get; set; }
         string DiscordWebhook { get; set; }
+        string DiscordFomoWebhook { get; set; }
         string DiscordMessageContent { get; set; }
 
         bool EnableEmoji { get; set; }

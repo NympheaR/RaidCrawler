@@ -1,4 +1,6 @@
 using Microsoft.VisualBasic;
+using Newtonsoft.Json.Linq;
+using NLog.Filters;
 using PKHeX.Core;
 using PKHeX.Drawing;
 using PKHeX.Drawing.Misc.Properties;
@@ -19,6 +21,7 @@ using System.Windows.Forms;
 using System.Xml.Linq;
 using static RaidCrawler.Core.Structures.Offsets;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.ScrollBar;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TaskbarClock;
 
 namespace RaidCrawler.WinForms
 {
@@ -37,6 +40,7 @@ namespace RaidCrawler.WinForms
 
         private readonly RaidContainer RaidContainer;
         private NotificationHandler Webhook;
+        private NotificationHandler FomoWebhook;
 
         private List<RaidFilter> RaidFilters = new();
         private static readonly Image map = Image.FromStream(new MemoryStream(Utils.GetBinaryResource("paldea.png")));
@@ -48,6 +52,8 @@ namespace RaidCrawler.WinForms
         public int StatDaySkipStreak = 0;
         public int StatShinyCount = 0;
         public string formTitle;
+        public List<string> Fomo = new();
+        public int FomoCount = 0;
 
         private ulong RaidBlockOffset = 0;
         private bool IsReading = false;
@@ -102,6 +108,7 @@ namespace RaidCrawler.WinForms
             };
 
             Webhook = new(Config);
+            FomoWebhook = new(Config, true);
             InitializeComponent();
 
             btnOpenMap.Enabled = false;
@@ -173,10 +180,13 @@ namespace RaidCrawler.WinForms
         public int GetStatDaySkipSuccess() => StatDaySkipSuccess;
         public int GetStatDaySkipStreak() => StatDaySkipStreak;
         public int GetStatShinyCount() => StatShinyCount;
+        public List<string> GetFomo() => Fomo;
 
         private void MainWindow_Load(object sender, EventArgs e)
         {
-            CenterToScreen();
+            Location = Config.Location;
+            if (Location.X == 0 && Location.Y == 0)
+                CenterToScreen();
             InputSwitchIP.Text = Config.IP;
             Protocol_dropdown.SelectedIndex = (int)Config.Protocol;
             USB_Port_TB.Text = Config.UsbPort.ToString();
@@ -420,7 +430,9 @@ namespace RaidCrawler.WinForms
                 var advanceTextInit = $"Skip Rate: {GetStatDaySkipSuccess()}/{GetStatDaySkipTries()}";
                 var missInit = $"Total Miss: {GetStatDaySkipTries() - GetStatDaySkipSuccess()}";
                 var streakInit = $"Streak: {GetStatDaySkipStreak()}";
-                var shinyTextInint = $"Total Shinies Found: {GetStatShinyCount()}";
+                var shinyTextInint = $"Shinies Missed: {GetStatShinyCount()}";
+                var fomoInit = GetFomo();
+                Invoke(() => FomoTip.SetToolTip(LabelShinyCount, string.Join(Environment.NewLine, fomoInit)));
                 Invoke(() => DaySkipSuccessRate.Text = advanceTextInit);
                 Invoke(() => TotalMiss.Text = missInit);
                 Invoke(() => Streak.Text = streakInit);
@@ -450,7 +462,9 @@ namespace RaidCrawler.WinForms
                     var advanceText = $"Skip Rate: {GetStatDaySkipSuccess()}/{GetStatDaySkipTries()}";
                     var miss = $"Total Miss: {GetStatDaySkipTries() - GetStatDaySkipSuccess()}";
                     var streak = $"Streak: {GetStatDaySkipStreak()}";
-                    var shinyText = $"Total Shinies Found: {GetStatShinyCount()}";
+                    var shinyText = $"Shinies Missed: {GetStatShinyCount()}";
+                    var fomo = GetFomo();
+                    Invoke(() => FomoTip.SetToolTip(LabelShinyCount, string.Join(Environment.NewLine, fomo)));
                     Invoke(() => DaySkipSuccessRate.Text = advanceText);
                     Invoke(() => TotalMiss.Text = miss);
                     Invoke(() => Streak.Text = streak);
@@ -684,6 +698,7 @@ namespace RaidCrawler.WinForms
 
         private void MainWindow_FormClosing(object sender, FormClosingEventArgs e)
         {
+            Config.Location = Location;
             var configpath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.json");
             JsonSerializerOptions options = new() { WriteIndented = true };
             string output = JsonSerializer.Serialize(Config, options);
@@ -753,6 +768,7 @@ namespace RaidCrawler.WinForms
                 EC.Text = !HideSeed ? $"{raid.EC:X8}" : "Hidden";
                 PID.Text = GetPIDString(raid, encounter);
                 Area.Text = $"{Areas.GetArea((int)(raid.Area - 1))} - Den {raid.Den}";
+                //textBox1.Text = $"{raid.Area}-{raid.Den}";
                 labelEvent.Visible = raid.IsEvent;
 
                 var teratype = raid.GetTeraType(encounter);
@@ -1124,15 +1140,18 @@ namespace RaidCrawler.WinForms
             return img;
         }
 
-        private static Image? GenerateMap(Raid raid, int teratype)
+        /*private static Image? GenerateMap(Raid raid, int teratype)
         {
             var original = PKHeX.Drawing.Misc.TypeSpriteUtil.GetTypeSpriteGem((byte)teratype);
             if (original is null)
                 return null;
-
+            var mapimg = (Image)new Bitmap(original, new Size(30, 30));
             var gem = (Image)new Bitmap(original, new Size(30, 30));
+            var gem2 = (Image)new Bitmap(original, new Size(30, 30));
             SpriteUtil.GetSpriteGlow(gem, 0xFF, 0xFF, 0xFF, out var glow, true);
+            SpriteUtil.GetSpriteGlow(gem, 0xCC, 0xCC, 0xCC, out var glow2, true);
             gem = ImageUtil.LayerImage(gem, ImageUtil.GetBitmap(glow, gem.Width, gem.Height, gem.PixelFormat), 0, 0);
+            gem2 = ImageUtil.LayerImage(gem, ImageUtil.GetBitmap(glow2, gem.Width, gem.Height, gem.PixelFormat), 0, 0);
             if (den_locations is null || den_locations.Count == 0)
                 return null;
 
@@ -1143,12 +1162,44 @@ namespace RaidCrawler.WinForms
                 {
                     x = (value[0] + 2.072021484) * 512 / 5000;
                     y = (value[2] + 5255.240018) * 512 / 5000;
-                    return ImageUtil.LayerImage(map, gem, (int)x, (int)y);
+                    mapimg = ImageUtil.LayerImage(mapimg, gem, (int)x, (int)y);
+                    //return ImageUtil.LayerImage(map, gem, (int)x, (int)y);
                 }
 
                 x = (den_locations[$"{raid.Area}-{raid.Den}"][0] + 2.072021484) * 512 / 5000;
                 y = (den_locations[$"{raid.Area}-{raid.Den}"][2] + 5255.240018) * 512 / 5000;
-                return ImageUtil.LayerImage(map, gem, (int)x, (int)y);
+                mapimg = ImageUtil.LayerImage(mapimg, gem2, (int)x, (int)y);
+                //return ImageUtil.LayerImage(map, gem2, (int)x, (int)y);
+                return mapimg;
+            }
+            catch { return null; }
+        }*/
+
+        private static Image? GenerateMap(Raid raid, int teratype)
+        {
+            var original = PKHeX.Drawing.Misc.TypeSpriteUtil.GetTypeSpriteGem((byte)teratype);
+            if (original == null)
+                return null;
+            var gem = (Image)new Bitmap(original, new Size(30, 30));
+            var gem2 = (Image)new Bitmap(original, new Size(30, 30));
+            SpriteUtil.GetSpriteGlow(gem, 0xFF, 0xFF, 0xFF, out var glow, true);
+            SpriteUtil.GetSpriteGlow(gem, 0xCC, 0xCC, 0xCC, out var glow2, true);
+            gem = ImageUtil.LayerImage(gem, ImageUtil.GetBitmap(glow, gem.Width, gem.Height, gem.PixelFormat), 0, 0);
+            gem2 = ImageUtil.LayerImage(gem, ImageUtil.GetBitmap(glow2, gem.Width, gem.Height, gem.PixelFormat), 0, 0);
+            if (den_locations == null || den_locations.Count == 0)
+                return null;
+            try
+            {
+                var x = (den_locations[$"{raid.Area}-{raid.Den}"][0] - 100.072021484) * 512 / 5000;
+                var y = (den_locations[$"{raid.Area}-{raid.Den}"][2] + 5350.240018) * 512 / 5000;
+                var mapimg = ImageUtil.LayerImage(map, gem, (int)x, (int)y);
+                if (den_locations.ContainsKey($"{raid.Area}-{raid.Den}_"))
+                {
+                    x = (den_locations[$"{raid.Area}-{raid.Den}_"][0] - 100.072021484) * 512 / 5000;
+                    y = (den_locations[$"{raid.Area}-{raid.Den}_"][2] + 5350.240018) * 512 / 5000;
+                    mapimg = ImageUtil.LayerImage(mapimg, gem2, (int)x, (int)y);
+                }
+                return mapimg;
             }
             catch { return null; }
         }
@@ -1157,6 +1208,8 @@ namespace RaidCrawler.WinForms
         {
             var raids = RaidContainer.Raids;
             var encounters = RaidContainer.Encounters;
+            var rewards = RaidContainer.Rewards;
+            var strings = GameInfo.GetStrings(1);
             var curSeeds = raids.Select(x => x.Seed).ToArray();
             var sameraids = curSeeds.Except(previousSeeds).ToArray().Length == 0;
 
@@ -1172,7 +1225,7 @@ namespace RaidCrawler.WinForms
             if (!Config.EnableFilters)
                 return true;
 
-            StatShinyCount += Enumerable.Range(0, raids.Count).Where(i => raids[i].CheckIsShiny(encounters[i])).Count();
+            //StatShinyCount += Enumerable.Range(0, raids.Count).Where(i => raids[i].CheckIsShiny(encounters[i])).Count();
 
             for (int i = 0; i < RaidFilters.Count; i++)
             {
@@ -1186,6 +1239,50 @@ namespace RaidCrawler.WinForms
                     return true;
             }
 
+            for (int i = 0; i < raids.Count; i++)
+            {
+                var raid = raids[i];
+                var encounter = encounters[i];
+                var reward = rewards[i];
+                var param = encounter.GetParam();
+
+                var timeSpan = stopwatch.Elapsed;
+                var timeEmpty = new TimeSpan(0, 0, 0, 0);
+                string time = string.Empty;
+                if (((int)timeSpan.TotalDays) != timeEmpty.TotalDays) { time = timeSpan.ToString(@"d\d\ %h\h\ mm\m\ ss\s"); }
+                else if (((int)timeSpan.TotalHours) != timeEmpty.TotalHours) { time = timeSpan.ToString(@"%h\h\ mm\m\ ss\s"); }
+                else if (((int)timeSpan.TotalMinutes) != timeEmpty.TotalMinutes) { time = timeSpan.ToString(@"%m\m\ ss\s"); }
+                else { time = timeSpan.ToString(@"%s\s"); }
+                var teraType = raids[i].GetTeraType(encounters[i]);
+                var color = TypeColor.GetTypeSpriteColor((byte)teraType);
+                var hexColor = $"{color.R:X2}{color.G:X2}{color.B:X2}";
+                var filter = new RaidFilter { Name = "FoMO" };
+
+                var blank = new PK9
+                {
+                    Species = encounter.Species,
+                    Form = encounter.Form,
+                    Gender = encounters[i].Gender,
+                };
+                blank.SetSuggestedFormArgument();
+                Encounter9RNG.GenerateData(blank, param, EncounterCriteria.Unrestricted, raid.Seed);
+                var spriteName = GetSpriteNameForUrl(blank, raids[i].CheckIsShiny(encounters[i]));
+                var form = Utils.GetFormString(blank.Species, blank.Form, strings);
+                var species = $"{strings.Species[encounter.Species]}";
+                var shiny = $"{(raid.CheckIsShiny(encounter) ? (ShinyExtensions.IsSquareShinyExist(blank) ? "⛋" : "☆") : "")}";
+                if (raids[i].CheckIsShiny(encounters[i]))
+                {
+                    StatShinyCount++;
+                    Fomo.Add($"{shiny} {species}{form}");
+                    if (Config.EnableFomoNotification)
+                        Task.Run(async () => await FomoWebhook.SendFomoNotification(encounter, raid, filter, time, reward, hexColor, spriteName, Source.Token));
+                    if (Config.SaveOnFomo)
+                        Task.WaitAll(Task.Run(async () => await ConnectionWrapper.SaveGame(Config, Source.Token).ConfigureAwait(false)));
+                    //Task.Run(async () => await SendFomoWebhookAsync(encounter, raid, time, reward, hexColor, spriteName));
+                }
+
+            }
+
             return StopAdvances;
         }
 
@@ -1197,10 +1294,10 @@ namespace RaidCrawler.WinForms
                 RaidBlockOffset = await ConnectionWrapper.Connection.PointerAll(ConnectionWrapper.RaidBlockPointer, token).ConfigureAwait(false);
             }
 
-            RaidContainer.ClearRaids();
             RaidContainer.ClearEncounters();
             RaidContainer.ClearRewards();
 
+            RaidContainer.ClearRaids();
             UpdateStatus("Reading raid block");
             var data = await ConnectionWrapper.Connection.ReadBytesAbsoluteAsync(RaidBlockOffset + RaidBlock.HEADER_SIZE, (int)(RaidBlock.SIZE - RaidBlock.HEADER_SIZE), token).ConfigureAwait(false);
 
@@ -1545,6 +1642,8 @@ namespace RaidCrawler.WinForms
                     Clipboard.SetText(Webhook.GetAnnouncement(encounters[i], raids[i], filter, time, rewards[i], hexColor, spriteName, "technicalcopy"));
                 else if (ModifierKeys == (Keys.Shift | Keys.Control))
                     Task.Run(async () => await Webhook.SendNotification(encounters[i], raids[i], filter, time, rewards[i], hexColor, spriteName, Source.Token));
+                else if (ModifierKeys == (Keys.Shift | Keys.Control | Keys.Alt))
+                    Task.Run(async () => await FomoWebhook.SendFomoNotification(encounters[i], raids[i], filter, time, rewards[i], hexColor, spriteName, Source.Token));
                 else
                     Clipboard.SetText(Webhook.GetAnnouncement(encounters[i], raids[i], filter, time, rewards[i], hexColor, spriteName, "copy"));
                 return;
@@ -1555,6 +1654,7 @@ namespace RaidCrawler.WinForms
         {
             Config.Protocol = (SysBot.Base.SwitchProtocol)Protocol_dropdown.SelectedIndex;
             Protocol_SelectedIndexChanged(Config.Protocol);
+            WriteConfig();
         }
 
         private async void ButtonScreenState_Click(object sender, EventArgs e)
@@ -1566,6 +1666,41 @@ namespace RaidCrawler.WinForms
         public void UpdateWebhook(ClientConfig config)
         {
             Webhook = new(config);
+            FomoWebhook = new(config, true);
         }
+
+        public void WriteConfig()
+        {
+            JsonSerializerOptions options = new() { WriteIndented = true };
+            string output = JsonSerializer.Serialize(Config, options);
+            using StreamWriter sw = new(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.json"));
+            sw.Write(output);
+        }
+
+        private void LabelShinyCount_Click(object sender, EventArgs e)
+        {
+            FomoCount++;
+            //LabelShinyCount.Text = LabelShinyCount.Text + "" + FomoCount.ToString();
+            if (FomoCount == 7)
+            {
+                FomoCount = 0;
+                Config.SaveOnFomo = !Config.SaveOnFomo;
+                LabelShinyCount.Text = $"FoMO Saves: {(Config.SaveOnFomo ? "On" : "Off")}";
+
+                System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer()
+                {
+                    Interval = 800,
+                    Enabled = true
+                };
+
+                timer.Tick += (sender, e) =>
+                {
+                    LabelShinyCount.Text = $"Shinies Missed: {GetStatShinyCount()}";
+                    WriteConfig();
+                    timer.Dispose();
+                };
+            }
+        }
+
     }
 }

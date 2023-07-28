@@ -13,6 +13,7 @@ namespace RaidCrawler.WinForms
         public int Progress { get; set; } = 0;
         public int EventProgress { get; set; } = 0;
         public bool EnableFilters { get; set; } = true;
+        public Point Location { get; set; } = new(0, 0);
 
         // Match
         public bool FocusWindow { get; set; } = true;
@@ -20,7 +21,9 @@ namespace RaidCrawler.WinForms
         public bool EnableAlertWindow { get; set; } = true;
         public string AlertWindowMessage { get; set; } = "Match found! Hold Shift and click one of the arrow keys to jump to the matching result.";
         public bool EnableNotification { get; set; } = false;
+        public bool EnableFomoNotification { get; set; } = false;
         public string DiscordWebhook { get; set; } = string.Empty;
+        public string DiscordFomoWebhook { get; set; } = string.Empty;
         public string DiscordMessageContent { get; set; } = string.Empty;
 
         // Date Advance
@@ -28,6 +31,7 @@ namespace RaidCrawler.WinForms
         public bool UseOvershoot { get; set; } = false;
         public bool DodgeSystemUpdate { get; set; } = false;
         public bool SaveOnMatch { get; set; } = true;
+        public bool SaveOnFomo { get; set; } = false;
         public bool UseSetStick { get; set; } = false;
 
         public int OpenHomeDelay { get; set; } = 1_800;

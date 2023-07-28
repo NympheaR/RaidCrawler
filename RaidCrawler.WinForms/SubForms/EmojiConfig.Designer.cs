@@ -54,6 +54,7 @@
             MinimizeBox = false;
             Name = "EmojiConfig";
             ShowIcon = false;
+            StartPosition = FormStartPosition.CenterParent;
             Text = "EmojiConfig";
             ((System.ComponentModel.ISupportInitialize)EmojiGrid).EndInit();
             ResumeLayout(false);
